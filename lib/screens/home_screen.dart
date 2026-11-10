@@ -12,6 +12,8 @@ import 'finance_screen.dart';
 import 'season_screen.dart';
 import 'field_screen.dart';
 import 'field_map_screen.dart';
+import 'care_screen.dart';
+import '../widgets/profile_avatar.dart';
 
 const nxGreen = Color(0xFF167A45);
 const nxDark = Color(0xFF103D29);
@@ -174,49 +176,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   const SizedBox(height: 25),
                   Row(
                     children: [
-                      TweenAnimationBuilder<double>(
-                        tween: Tween(begin: .88, end: 1),
-                        duration: const Duration(milliseconds: 750),
-                        curve: Curves.easeOutBack,
-                        builder: (context, scale, child) {
-                          return Transform.scale(
-                            scale: scale,
-                            child: child,
-                          );
-                        },
-                        child: Container(
-                          width: 62,
-                          height: 62,
-                          decoration: BoxDecoration(
-                            gradient: const LinearGradient(
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                              colors: [
-                                Color(0xFFB8F5D2),
-                                Color(0xFF37C982),
-                                Color(0xFF087647),
-                              ],
-                            ),
-                            borderRadius: BorderRadius.circular(21),
-                            border: Border.all(
-                              color: Colors.white.withOpacity(.65),
-                              width: 1.5,
-                            ),
-                            boxShadow: [
-                              BoxShadow(
-                                color: const Color(0xFF8BFFC0).withOpacity(.32),
-                                blurRadius: 20,
-                                spreadRadius: 2,
-                              ),
-                            ],
-                          ),
-                          child: const Icon(
-                            Icons.person_rounded,
-                            color: Colors.white,
-                            size: 35,
-                          ),
-                        ),
-                      ),
+                      const ProfileAvatar(),
                       const SizedBox(width: 14),
                       Expanded(
                         child: Column(
@@ -406,7 +366,18 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                       ),
                       const SizedBox(width: 12),
-                      const Expanded(child: SizedBox()),
+                      Expanded(
+                        child: _FeatureCard(
+                          icon: Icons.calendar_month_rounded,
+                          title: 'Lịch chăm sóc',
+                          subtitle: 'Tưới nước • Bón phân',
+                          color: const Color(0xFF16A085),
+                          onTap: () => Navigator.push(
+                            context,
+                            _smoothRoute(const CareScreen()),
+                          ),
+                        ),
+                      ),
                     ],
                   ),
 
@@ -599,63 +570,18 @@ class _FeatureCard extends StatefulWidget {
   State<_FeatureCard> createState() => _FeatureCardState();
 }
 
-class _FeatureCardState extends State<_FeatureCard>
-    with SingleTickerProviderStateMixin {
+class _FeatureCardState extends State<_FeatureCard> {
   bool pressed = false;
-
-  late final AnimationController dashboardEntranceController;
-  late final Animation<double> dashboardFade;
-  late final Animation<Offset> dashboardSlide;
-
-  @override
-  void initState() {
-    super.initState();
-
-    dashboardEntranceController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 650),
-    );
-
-    dashboardFade = CurvedAnimation(
-      parent: dashboardEntranceController,
-      curve: Curves.easeOut,
-    );
-
-    dashboardSlide = Tween<Offset>(
-      begin: const Offset(0, .10),
-      end: Offset.zero,
-    ).animate(
-      CurvedAnimation(
-        parent: dashboardEntranceController,
-        curve: Curves.easeOutCubic,
-      ),
-    );
-
-    dashboardEntranceController.forward();
-  }
-
-  @override
-  void dispose() {
-    dashboardEntranceController.dispose();
-    super.dispose();
-  }
 
   @override
   Widget build(BuildContext context) {
-    return FadeTransition(
-      opacity: dashboardFade,
-      child: SlideTransition(
-        position: dashboardSlide,
-        child: AnimatedScale(
-      scale: pressed ? .955 : 1,
-      duration: const Duration(milliseconds: 190),
-      curve: Curves.easeOutCubic,
+    return AnimatedScale(
+      scale: pressed ? .98 : 1,
+      duration: const Duration(milliseconds: 120),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(23),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-          child: Material(
-            color: Colors.white.withOpacity(.82),
+        child: Material(
+            color: Colors.white.withOpacity(.94),
             child: InkWell(
               onTap: widget.onTap,
               onHighlightChanged: (value) => setState(() => pressed = value),
