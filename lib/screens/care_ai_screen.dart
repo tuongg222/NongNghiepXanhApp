@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../services/weather_service.dart';
+import 'ai_chat_screen.dart';
 
 class CareAIScreen extends StatefulWidget {
   const CareAIScreen({super.key});
@@ -149,6 +150,19 @@ class _CareAIScreenState extends State<CareAIScreen> {
 
     return Scaffold(
       appBar: AppBar(
+        actions: [
+          IconButton(
+            tooltip: 'Trò chuyện với AI',
+            icon: const Icon(Icons.auto_awesome),
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => const AIChatScreen(),
+                ),
+              );
+            },
+          ),
+
         title: const Text('AI chăm sóc cây trồng'),
         actions: [
           IconButton(
