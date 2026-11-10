@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
@@ -16,6 +17,9 @@ class _FieldMapScreenState extends State<FieldMapScreen> {
   final mapController = MapController();
   final points = <LatLng>[];
   bool locating = false;
+  bool tracking = false;
+  StreamSubscription<Position>? gpsSubscription;
+  DateTime? lastGpsRecord;
   bool satelliteMode = false;
   int? selectedPoint;
   double congM2 = 1000;
@@ -98,6 +102,79 @@ class _FieldMapScreenState extends State<FieldMapScreen> {
     } finally {
       if (mounted) setState(() => locating = false);
     }
+  }
+
+
+  Future<void> startTracking() async {
+    try {
+      if (!await Geolocator.isLocationServiceEnabled()) {
+        throw Exception('Hãy bật GPS điện thoại');
+      }
+
+      var permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+      }
+      if (permission == LocationPermission.denied ||
+          permission == LocationPermission.deniedForever) {
+        throw Exception('Chưa cấp quyền GPS');
+      }
+
+      await gpsSubscription?.cancel();
+
+      setState(() => tracking = true);
+
+      gpsSubscription = Geolocator.getPositionStream(
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.bestForNavigation,
+          distanceFilter: 5,
+        ),
+      ).listen((position) {
+        if (!tracking || position.accuracy > 20) return;
+
+        final now = DateTime.now();
+        if (lastGpsRecord != null &&
+            now.difference(lastGpsRecord!).inSeconds < 3) {
+          return;
+        }
+
+        final point = LatLng(position.latitude, position.longitude);
+        if (points.isNotEmpty && distance(points.last, point) < 5) {
+          return;
+        }
+
+        lastGpsRecord = now;
+        setState(() {
+          points.add(point);
+          mapController.move(point, 19);
+        });
+      });
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Đang ghi GPS đi quanh bờ ruộng')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => tracking = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.toString().replaceFirst('Exception: ', ''))),
+        );
+      }
+    }
+  }
+
+  Future<void> stopTracking() async {
+    await gpsSubscription?.cancel();
+    gpsSubscription = null;
+    if (mounted) setState(() => tracking = false);
+  }
+
+  @override
+  void dispose() {
+    gpsSubscription?.cancel();
+    super.dispose();
   }
 
   void addPoint(LatLng p) {
@@ -376,6 +453,18 @@ class _FieldMapScreenState extends State<FieldMapScreen> {
                   style: TextStyle(color: Colors.grey, fontSize: 12),
                 ),
                 const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
+                  child: FilledButton.icon(
+                    style: FilledButton.styleFrom(
+                      backgroundColor: tracking ? Colors.orange : const Color(0xFF167A45),
+                    ),
+                    onPressed: tracking ? stopTracking : startTracking,
+                    icon: Icon(tracking ? Icons.stop_circle : Icons.directions_walk),
+                    label: Text(tracking ? 'Kết thúc đo GPS' : 'Đi quanh ruộng để đo'),
+                  ),
+                ),
+                const SizedBox(height: 8),
                 Row(
                   children: [
                     Expanded(
