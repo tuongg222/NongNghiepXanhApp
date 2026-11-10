@@ -631,9 +631,6 @@ class _FeatureCardState extends State<_FeatureCard> {
             ),
           ),
         ),
-      ),
-        ),
-      ),
     );
   }
 }
