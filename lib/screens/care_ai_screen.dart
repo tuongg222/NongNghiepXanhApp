@@ -150,28 +150,26 @@ class _CareAIScreenState extends State<CareAIScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        actions: [
-          IconButton(
-            tooltip: 'Trò chuyện với AI',
-            icon: const Icon(Icons.auto_awesome),
-            onPressed: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (_) => const AIChatScreen(),
-                ),
-              );
-            },
-          ),
-
-        title: const Text('AI chăm sóc cây trồng'),
-        actions: [
-          IconButton(
-            onPressed: loading ? null : loadWeather,
-            icon: const Icon(Icons.refresh),
-            tooltip: 'Tải lại thời tiết',
-          ),
-        ],
-      ),
+      title: const Text('AI chăm sóc cây trồng'),
+      actions: [
+        IconButton(
+          tooltip: 'Trò chuyện với AI',
+          icon: const Icon(Icons.auto_awesome),
+          onPressed: () {
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => const AIChatScreen(),
+              ),
+            );
+          },
+        ),
+        IconButton(
+          onPressed: loading ? null : loadWeather,
+          icon: const Icon(Icons.refresh),
+          tooltip: 'Tải lại thời tiết',
+        ),
+      ],
+    ),
       body: loading
           ? const Center(child: CircularProgressIndicator())
           : ListView(
@@ -207,9 +205,13 @@ class _CareAIScreenState extends State<CareAIScreen> {
                   ),
                 ),
                 if (error != null)
-                  Card(color: Colors.red.shade50,
-                    child: Padding(padding: const EdgeInsets.all(12),
-                      child: Text('Không tải được thời tiết: $error')),
+                  Card(
+                    color: Colors.red.shade50,
+                    child: Padding(
+                      padding: const EdgeInsets.all(12),
+                      child: Text('Không tải được thời tiết: $error'),
+                    ),
+                  ),
 
                 const SizedBox(height: 12),
                 infoCard(Icons.warning_amber_rounded, 'Cảnh báo thời tiết',

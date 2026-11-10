@@ -1,0 +1,6 @@
+include: package:flutter_lints/flutter.yaml
+
+# Ignore old backup code
+analyzer:
+  exclude:
+    - backup_before_upgrade/**
