@@ -3,6 +3,7 @@ import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'farm_profile_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../services/chat_service.dart';
 
@@ -69,7 +70,29 @@ class _AIChatScreenState extends State<AIChatScreen> {
     });
   }
 
-  String get conversationContext {
+
+  Future<String> getFarmContext() async {
+    final prefs = await SharedPreferences.getInstance();
+    final raw = prefs.getString('nx_farm_profile');
+    if (raw == null) return 'Chưa có hồ sơ ruộng.';
+    try {
+      final d = jsonDecode(raw) as Map<String, dynamic>;
+      return '''
+HỒ SƠ RUỘNG:
+Tên: ${d['name']}
+Diện tích: ${d['area']} ha
+Giống lúa: ${d['variety']}
+Ngày gieo sạ: ${d['sowDate']}
+Địa điểm: ${d['location']}
+Giai đoạn: ${d['stage']}
+Ghi chú: ${d['note']}
+''';
+    } catch (_) {
+      return 'Hồ sơ ruộng không đọc được.';
+    }
+  }
+
+String get conversationContext {
     final recent = messages.length > 12
         ? messages.sublist(messages.length - 12)
         : messages;
@@ -166,7 +189,8 @@ class _AIChatScreenState extends State<AIChatScreen> {
     final question = (text ?? input.text).trim();
     if (question.isEmpty || sending) return;
 
-    final context = conversationContext;
+    final farmContext = await getFarmContext();
+    final context = '$farmContext\\n\\n$conversationContext';
     input.clear();
 
     setState(() {
@@ -237,7 +261,20 @@ class _AIChatScreenState extends State<AIChatScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFFF5F8F4),
       appBar: AppBar(
+        title: const Text('AI Nông nghiệp'),
         actions: [
+          IconButton(
+            tooltip: 'Hồ sơ ruộng',
+            icon: const Icon(Icons.agriculture),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const FarmProfileScreen(),
+                ),
+              );
+            },
+          ),
           IconButton(
             tooltip: 'Xóa lịch sử chat',
             icon: const Icon(Icons.delete_outline),
