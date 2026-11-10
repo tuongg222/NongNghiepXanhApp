@@ -11,6 +11,7 @@ import 'price_screen.dart';
 import 'finance_screen.dart';
 import 'season_screen.dart';
 import 'field_screen.dart';
+import 'field_map_screen.dart';
 
 const nxGreen = Color(0xFF167A45);
 const nxDark = Color(0xFF103D29);
@@ -365,9 +366,9 @@ class _HomeScreenState extends State<HomeScreen> {
                           title: 'Bản đồ GPS',
                           subtitle: 'Đo diện tích ruộng',
                           color: const Color(0xFF3986D8),
-                          onTap: () => openFeature(
-                            'Bản đồ GPS',
-                            'Định vị, đánh dấu ranh giới và đo diện tích đất.',
+                          onTap: () => Navigator.push(
+                            context,
+                            _smoothRoute(const FieldMapScreen()),
                           ),
                         ),
                       ),
