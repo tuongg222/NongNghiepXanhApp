@@ -1,6 +1,7 @@
 
 import 'package:flutter/material.dart';
 import 'home_screen.dart';
+import 'care_ai_screen.dart';
 import 'field_screen.dart';
 import 'season_screen.dart';
 import 'finance_screen.dart';
@@ -20,6 +21,7 @@ class _MainNavigationState extends State<MainNavigation> {
     const HomeScreen(),
     const FieldScreen(),
     const SeasonScreen(),
+    const CareAIScreen(),
     const FinanceScreen(),
     const _AccountPage(),
   ];
@@ -28,6 +30,7 @@ class _MainNavigationState extends State<MainNavigation> {
     Icons.home_rounded,
     Icons.grass_rounded,
     Icons.calendar_month_rounded,
+    Icons.eco_rounded,
     Icons.account_balance_wallet_rounded,
     Icons.person_rounded,
   ];
@@ -36,6 +39,7 @@ class _MainNavigationState extends State<MainNavigation> {
     'Trang chủ',
     'Ruộng',
     'Mùa vụ',
+    'Chăm sóc',
     'Tài chính',
     'Tài khoản',
   ];
@@ -65,7 +69,7 @@ class _MainNavigationState extends State<MainNavigation> {
           child: Padding(
             padding: const EdgeInsets.fromLTRB(6, 8, 6, 5),
             child: Row(
-              children: List.generate(5, (index) {
+              children: List.generate(6, (index) {
                 final selected = selectedIndex == index;
 
                 return Expanded(
