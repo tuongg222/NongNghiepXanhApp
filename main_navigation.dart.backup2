@@ -1,0 +1,172 @@
+import 'package:flutter/material.dart';
+
+import 'home_screen.dart';
+import 'field_screen.dart';
+import season_screen.dart;
+import finance_screen.dart';
+import login_screen.dart';
+import '../services/auth_service.dart';
+import '../widgets/profile_avatar.dart';
+
+const navGreen = Color(0xFF167A45);
+
+class MainNavigation extends StatefulWidget {
+  const MainNavigation({super.key});
+
+  @override
+  State<MainNavigation> createState() => _MainNavigationState();
+}
+
+class _MainNavigationState extends State<MainNavigation> {
+  int selectedIndex = 0;
+
+  final pages = const [
+    HomeScreen(),
+    FieldScreen(),
+    SeasonScreen(),
+    FinanceScreen(),
+  ];
+
+  Future<void> logout() async {
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Đăng xuất?'),
+        content: const Text('Bạn có muốn đăng xuất tài khoản không?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Hủy'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Đăng xuất'),
+          ),
+        ],
+      ),
+    );
+
+    if (ok != true) return;
+
+    await AuthService.logout();
+    if (!mounted) return;
+
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(builder: (_) => const LoginScreen()),
+      (_) => false,
+    );
+  }
+
+  Widget accountPage() {
+    final username = AuthService.user?['username']?.toString() ?? 'Nhà nông';
+
+    return Scaffold(
+      backgroundColor: const Color(0xFFF2F7F3),
+      appBar: AppBar(title: const Text('Tài khoản')),
+      body: ListView(
+        padding: const EdgeInsets.all(20),
+        children: [
+          Center(
+            child: Column(
+              children: [
+                const ProfileAvatar(),
+                const SizedBox(height: 12),
+                Text(
+                  username,
+                  style: const TextStyle(
+                    fontSize: 23,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF103D29),
+                  ),
+                ),
+                const Text('Hồ sơ nhà nông'),
+              ],
+            ),
+          ),
+          const SizedBox(height: 24),
+          Card(
+            child: ListTile(
+              leading: const Icon(Icons.person_outline, color: navGreen),
+              title: const Text('Tên tài khoản'),
+              subtitle: Text(username),
+            ),
+          ),
+          Card(
+            child: ListTile(
+              leading: const Icon(Icons.image_outlined, color: navGreen),
+              title: const Text('Ảnh đại diện'),
+              subtitle: const Text('Nhấn ảnh phía trên để thay đổi'),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () {},
+            ),
+          ),
+          Card(
+            child: ListTile(
+              leading: const Icon(Icons.settings_outlined, color: navGreen),
+              title: const Text('Cài đặt'),
+              subtitle: const Text('Cài đặt ứng dụng sẽ được bổ sung'),
+            ),
+          ),
+          const SizedBox(height: 20),
+          FilledButton.icon(
+            onPressed: logout,
+            icon: const Icon(Icons.logout),
+            label: const Text('Đăng xuất'),
+            style: FilledButton.styleFrom(
+              backgroundColor: Colors.red.shade700,
+              padding: const EdgeInsets.all(15),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final allPages = [...pages, accountPage()];
+
+    return Scaffold(
+      body: IndexedStack(
+        index: selectedIndex,
+        children: allPages,
+      ),
+      bottomNavigationBar: NavigationBar(
+        height: 68,
+        selectedIndex: selectedIndex,
+        onDestinationSelected: (index) {
+          setState(() => selectedIndex = index);
+        },
+        backgroundColor: Colors.white,
+        indicatorColor: const Color(0xFFD9F2E2),
+        destinations: const [
+          NavigationDestination(
+            icon: Icon(Icons.home_outlined),
+            selectedIcon: Icon(Icons.home, color: navGreen),
+            label: 'Trang chủ',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.map_outlined),
+            selectedIcon: Icon(Icons.map, color: navGreen),
+            label: 'Ruộng',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.grass_outlined),
+            selectedIcon: Icon(Icons.grass, color: navGreen),
+            label: 'Mùa vụ',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.account_balance_wallet_outlined),
+            selectedIcon: Icon(Icons.account_balance_wallet, color: navGreen),
+            label: 'Tài chính',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.person_outline),
+            selectedIcon: Icon(Icons.person, color: navGreen),
+            label: 'Tài khoản',
+          ),
+        ],
+      ),
+    );
+  }
+}

@@ -1,3 +1,7 @@
+import '../services/api_service.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../services/chat_service.dart';
@@ -17,6 +21,9 @@ class _AIChatScreenState extends State<AIChatScreen> {
 
   final messages = <Map<String, dynamic>>[];
   bool sending = false;
+  XFile? selectedImage;
+  final imagePicker = ImagePicker();
+
   String? error;
 
   final suggestions = [
@@ -77,6 +84,82 @@ class _AIChatScreenState extends State<AIChatScreen> {
     input.dispose();
     scroll.dispose();
     super.dispose();
+  }
+
+
+  Future<void> pickImage(ImageSource source) async {
+    try {
+      final file = await imagePicker.pickImage(
+        source: source,
+        imageQuality: 80,
+        maxWidth: 1600,
+      );
+      if (file != null && mounted) {
+        setState(() => selectedImage = file);
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Không chọn được ảnh: $e')),
+        );
+      }
+    }
+  }
+
+  Future<void> sendImage() async {
+    final file = selectedImage;
+    if (file == null || sending) return;
+
+    final question = input.text.trim().isEmpty
+        ? 'Hãy phân tích ảnh cây lúa này.'
+        : input.text.trim();
+
+    setState(() {
+      sending = true;
+      error = null;
+      messages.add({
+        'role': 'user',
+        'text': '[Ảnh cây lúa] $question',
+      });
+    });
+
+    input.clear();
+    selectedImage = null;
+    await saveHistory();
+    scrollToBottom();
+
+    try {
+      final bytes = await file.readAsBytes();
+      final path = file.path.toLowerCase();
+      final mime = path.endsWith('.png')
+          ? 'image/png'
+          : path.endsWith('.webp')
+              ? 'image/webp'
+              : 'image/jpeg';
+
+      final data = await ApiService.diagnose(
+        imageBase64: base64Encode(bytes),
+        mimeType: mime,
+        context: question,
+      );
+
+      final answer = data['result']?.toString() ??
+          data['description']?.toString() ??
+          'AI chưa trả về kết quả.';
+
+      if (!mounted) return;
+      setState(() {
+        messages.add({'role': 'ai', 'text': answer});
+      });
+      await saveHistory();
+    } catch (e) {
+      if (mounted) setState(() => error = e.toString());
+    } finally {
+      if (mounted) {
+        setState(() => sending = false);
+        scrollToBottom();
+      }
+    }
   }
 
   Future<void> send([String? text]) async {
@@ -275,8 +358,26 @@ class _AIChatScreenState extends State<AIChatScreen> {
                     ),
                   ),
                   TextButton(
-                    onPressed: sending ? null : () => send(),
+                    onPressed: sending
+                        ? null
+                        : () => selectedImage != null ? sendImage() : send(),
                     child: const Text('Thử lại'),
+                  ),
+                ],
+              ),
+            ),
+          if (selectedImage != null)
+            Container(
+              color: Colors.white,
+              padding: const EdgeInsets.all(10),
+              child: Row(
+                children: [
+                  const Icon(Icons.image, color: green),
+                  const SizedBox(width: 8),
+                  Expanded(child: Text(selectedImage!.name)),
+                  IconButton(
+                    onPressed: () => setState(() => selectedImage = null),
+                    icon: const Icon(Icons.close),
                   ),
                 ],
               ),
@@ -288,6 +389,20 @@ class _AIChatScreenState extends State<AIChatScreen> {
               top: false,
               child: Row(
                 children: [
+                  IconButton(
+                    tooltip: 'Chọn ảnh',
+                    onPressed: sending
+                        ? null
+                        : () => pickImage(ImageSource.gallery),
+                    icon: const Icon(Icons.photo_library_outlined),
+                  ),
+                  IconButton(
+                    tooltip: 'Chụp ảnh',
+                    onPressed: sending
+                        ? null
+                        : () => pickImage(ImageSource.camera),
+                    icon: const Icon(Icons.camera_alt_outlined),
+                  ),
                   Expanded(
                     child: TextField(
                       controller: input,
