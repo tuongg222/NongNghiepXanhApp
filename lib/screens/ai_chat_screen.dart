@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../services/chat_service.dart';
 
 class AIChatScreen extends StatefulWidget {
@@ -26,6 +27,52 @@ class _AIChatScreenState extends State<AIChatScreen> {
   ];
 
   @override
+  void initState() {
+    super.initState();
+    loadHistory();
+  }
+
+  Future<void> loadHistory() async {
+    final prefs = await SharedPreferences.getInstance();
+    final raw = prefs.getString('nx_ai_chat_history');
+    if (raw == null || !mounted) return;
+
+    try {
+      final decoded = jsonDecode(raw) as List<dynamic>;
+      setState(() {
+        messages.addAll(decoded.map((e) =>
+          Map<String, dynamic>.from(e as Map)));
+      });
+      scrollToBottom();
+    } catch (_) {}
+  }
+
+  Future<void> saveHistory() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('nx_ai_chat_history', jsonEncode(messages));
+  }
+
+  Future<void> clearHistory() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('nx_ai_chat_history');
+    if (!mounted) return;
+    setState(() {
+      messages.clear();
+      error = null;
+    });
+  }
+
+  String get conversationContext {
+    final recent = messages.length > 12
+        ? messages.sublist(messages.length - 12)
+        : messages;
+    return recent.map((m) {
+      final role = m['role'] == 'user' ? 'Người trồng' : 'AI';
+      return '$role: ${m['text']}';
+    }).join('\n');
+  }
+
+  @override
   void dispose() {
     input.dispose();
     scroll.dispose();
@@ -36,6 +83,7 @@ class _AIChatScreenState extends State<AIChatScreen> {
     final question = (text ?? input.text).trim();
     if (question.isEmpty || sending) return;
 
+    final context = conversationContext;
     input.clear();
 
     setState(() {
@@ -44,15 +92,17 @@ class _AIChatScreenState extends State<AIChatScreen> {
       messages.add({'role': 'user', 'text': question});
     });
 
+    await saveHistory();
     scrollToBottom();
 
     try {
-      final answer = await ChatService.sendMessage(question);
+      final answer = await ChatService.sendMessage(question, context: context);
       if (!mounted) return;
 
       setState(() {
         messages.add({'role': 'ai', 'text': answer});
       });
+      await saveHistory();
     } catch (e) {
       if (!mounted) return;
       setState(() => error = e.toString());
@@ -104,6 +154,33 @@ class _AIChatScreenState extends State<AIChatScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFFF5F8F4),
       appBar: AppBar(
+        actions: [
+          IconButton(
+            tooltip: 'Xóa lịch sử chat',
+            icon: const Icon(Icons.delete_outline),
+            onPressed: messages.isEmpty ? null : () async {
+              final ok = await showDialog<bool>(
+                context: context,
+                builder: (ctx) => AlertDialog(
+                  title: const Text('Xóa hội thoại?'),
+                  content: const Text('Lịch sử trò chuyện sẽ bị xóa khỏi thiết bị.'),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(ctx, false),
+                      child: const Text('Hủy'),
+                    ),
+                    FilledButton(
+                      onPressed: () => Navigator.pop(ctx, true),
+                      child: const Text('Xóa'),
+                    ),
+                  ],
+                ),
+              );
+              if (ok == true) await clearHistory();
+            },
+          ),
+        ],
+
         title: const Row(
           children: [
             CircleAvatar(
