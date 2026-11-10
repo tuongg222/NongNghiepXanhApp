@@ -261,7 +261,7 @@ String get conversationContext {
     return Scaffold(
       backgroundColor: const Color(0xFFF5F8F4),
       appBar: AppBar(
-        title: const Text('AI Nông nghiệp'),
+
         actions: [
           IconButton(
             tooltip: 'Hồ sơ ruộng',
