@@ -39,4 +39,31 @@ class ApiService {
 
     return data;
   }
+
+  static Future<Map<String, dynamic>> chat({
+    required String message,
+    String context = '',
+  }) async {
+    final response = await http.post(
+      Uri.parse('$workerBase/chat'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'message': message,
+        'context': context,
+      }),
+    ).timeout(const Duration(seconds: 120));
+
+    final data = jsonDecode(response.body)
+        as Map<String, dynamic>;
+
+    if (response.statusCode < 200 ||
+        response.statusCode >= 300) {
+      throw Exception(
+        data['error'] ?? 'AI loi HTTP ${response.statusCode}',
+      );
+    }
+
+    return data;
+  }
+
 }

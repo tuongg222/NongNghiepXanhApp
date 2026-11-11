@@ -2,11 +2,12 @@ import 'package:flutter/material.dart';
 
 import 'home_screen.dart';
 import 'field_screen.dart';
-import 'season_screen.dart';
 import 'care_screen.dart';
-import 'diagnose_screen.dart';
+import 'chat_ai_screen.dart';
+import 'season_screen.dart';
 import 'finance_screen.dart';
 import '../widgets/profile_avatar.dart';
+
 class MainNavigation extends StatefulWidget {
   const MainNavigation({super.key});
 
@@ -20,10 +21,8 @@ class _MainNavigationState extends State<MainNavigation> {
   late final List<Widget> pages = [
     const HomeScreen(),
     const FieldScreen(),
-    const SeasonScreen(),
+    const ChatAiScreen(),
     const CareScreen(),
-    const DiagnoseScreen(),
-    const FinanceScreen(),
     const _AccountPage(),
   ];
 
@@ -37,13 +36,12 @@ class _MainNavigationState extends State<MainNavigation> {
         children: pages,
       ),
       bottomNavigationBar: NavigationBar(
-        height: 70,
+        height: 68,
         backgroundColor: Colors.white,
-        elevation: 0,
         indicatorColor: green.withValues(alpha: 0.12),
         selectedIndex: selectedIndex,
-        labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
-        animationDuration: const Duration(milliseconds: 250),
+        labelBehavior:
+            NavigationDestinationLabelBehavior.alwaysShow,
         onDestinationSelected: (index) {
           setState(() => selectedIndex = index);
         },
@@ -59,28 +57,18 @@ class _MainNavigationState extends State<MainNavigation> {
             label: 'Ruộng',
           ),
           NavigationDestination(
-            icon: Icon(Icons.grass_outlined),
-            selectedIcon: Icon(Icons.grass_rounded),
-            label: 'Mùa vụ',
+            icon: Icon(Icons.smart_toy_outlined),
+            selectedIcon: Icon(Icons.smart_toy),
+            label: 'AI Chat',
           ),
           NavigationDestination(
             icon: Icon(Icons.calendar_month_outlined),
-            selectedIcon: Icon(Icons.calendar_month_rounded),
+            selectedIcon: Icon(Icons.calendar_month),
             label: 'Chăm sóc',
           ),
           NavigationDestination(
-            icon: Icon(Icons.biotech_outlined),
-            selectedIcon: Icon(Icons.biotech_rounded),
-            label: 'AI',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.account_balance_wallet_outlined),
-            selectedIcon: Icon(Icons.account_balance_wallet_rounded),
-            label: 'Tài chính',
-          ),
-          NavigationDestination(
             icon: Icon(Icons.person_outline),
-            selectedIcon: Icon(Icons.person_rounded),
+            selectedIcon: Icon(Icons.person),
             label: 'Tài khoản',
           ),
         ],
@@ -92,22 +80,60 @@ class _MainNavigationState extends State<MainNavigation> {
 class _AccountPage extends StatelessWidget {
   const _AccountPage();
 
+  void openPage(BuildContext context, Widget page) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => page),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Tài khoản')),
-      body: const Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ProfileAvatar(),
-            SizedBox(height: 16),
-            Text(
+      body: ListView(
+        padding: const EdgeInsets.all(20),
+        children: [
+          const Center(child: ProfileAvatar()),
+          const SizedBox(height: 12),
+          const Center(
+            child: Text(
               'Tài khoản Nông Nghiệp Xanh',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
             ),
-          ],
-        ),
+          ),
+          const SizedBox(height: 25),
+          const Text(
+            'CHỨC NĂNG KHÁC',
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              color: Colors.green,
+            ),
+          ),
+          const SizedBox(height: 10),
+          Card(
+            child: ListTile(
+              leading: const Icon(Icons.grass, color: Colors.green),
+              title: const Text('Quản lý mùa vụ'),
+              subtitle: const Text('Theo dõi tiến trình cây trồng'),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () => openPage(context, const SeasonScreen()),
+            ),
+          ),
+          Card(
+            child: ListTile(
+              leading: const Icon(Icons.account_balance_wallet,
+                  color: Colors.green),
+              title: const Text('Tài chính nông nghiệp'),
+              subtitle: const Text('Chi phí, doanh thu và lợi nhuận'),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () => openPage(context, const FinanceScreen()),
+            ),
+          ),
+        ],
       ),
     );
   }
