@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'screens/home_screen.dart';
+import 'screens/main_navigation.dart';
 import 'screens/login_screen.dart';
 import 'services/auth_service.dart';
 import 'services/sync_service.dart';
@@ -62,7 +62,7 @@ class _AuthGateState extends State<AuthGate> {
         }
 
         return AuthService.token != null
-            ? const HomeScreen()
+            ? const MainNavigation()
             : const LoginScreen();
       },
     );
