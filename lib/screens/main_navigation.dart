@@ -37,41 +37,63 @@ class _MainNavigationState extends State<MainNavigation> {
         index: selectedIndex,
         children: pages,
       ),
-      bottomNavigationBar: NavigationBar(
-        height: 68,
-        backgroundColor: Colors.white,
-        indicatorColor: const Color(0xFF167A45).withValues(alpha: 0.12),
-        selectedIndex: selectedIndex,
-        labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
-        onDestinationSelected: (index) {
-          setState(() => selectedIndex = index);
-        },
-        destinations: const [
-          NavigationDestination(
-            icon: Icon(Icons.home_rounded),
-            label: 'Trang chủ',
+      bottomNavigationBar: SafeArea(
+        top: false,
+        child: Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            border: Border(
+              top: BorderSide(
+                color: Colors.green.withValues(alpha: 0.08),
+              ),
+            ),
           ),
-          NavigationDestination(
-            icon: Icon(Icons.grass_rounded),
-            label: 'Ruộng',
+          child: NavigationBar(
+            height: 72,
+            backgroundColor: Colors.white,
+            elevation: 0,
+            indicatorColor: green.withValues(alpha: 0.12),
+            selectedIndex: selectedIndex,
+            labelBehavior:
+                NavigationDestinationLabelBehavior.alwaysShow,
+            animationDuration: const Duration(milliseconds: 300),
+            onDestinationSelected: (index) {
+              setState(() => selectedIndex = index);
+            },
+            destinations: const [
+              NavigationDestination(
+                icon: Icon(Icons.home_outlined),
+                selectedIcon: Icon(Icons.home_rounded),
+                label: 'Trang chủ',
+              ),
+              NavigationDestination(
+                icon: Icon(Icons.grass_outlined),
+                selectedIcon: Icon(Icons.grass_rounded),
+                label: 'Ruộng',
+              ),
+              NavigationDestination(
+                icon: Icon(Icons.calendar_month_outlined),
+                selectedIcon: Icon(Icons.calendar_month_rounded),
+                label: 'Mùa vụ',
+              ),
+              NavigationDestination(
+                icon: Icon(Icons.eco_outlined),
+                selectedIcon: Icon(Icons.eco_rounded),
+                label: 'Chăm sóc',
+              ),
+              NavigationDestination(
+                icon: Icon(Icons.account_balance_wallet_outlined),
+                selectedIcon: Icon(Icons.account_balance_wallet_rounded),
+                label: 'Tài chính',
+              ),
+              NavigationDestination(
+                icon: Icon(Icons.person_outline_rounded),
+                selectedIcon: Icon(Icons.person_rounded),
+                label: 'Tài khoản',
+              ),
+            ],
           ),
-          NavigationDestination(
-            icon: Icon(Icons.calendar_month_rounded),
-            label: 'Mùa vụ',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.eco_rounded),
-            label: 'Chăm sóc',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.account_balance_wallet_rounded),
-            label: 'Tài chính',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.person_rounded),
-            label: 'Tài khoản',
-          ),
-        ],
+        ),
       ),
     );
   }
