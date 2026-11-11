@@ -3,11 +3,10 @@ import 'package:flutter/material.dart';
 import 'home_screen.dart';
 import 'field_screen.dart';
 import 'season_screen.dart';
-import care_screen.dart';
-import diagnose_screen.dart';
-import finance_screen.dart';
+import 'care_screen.dart';
+import 'diagnose_screen.dart';
+import 'finance_screen.dart';
 import '../widgets/profile_avatar.dart';
-
 class MainNavigation extends StatefulWidget {
   const MainNavigation({super.key});
 
