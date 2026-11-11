@@ -138,12 +138,9 @@ class _DiagnoseScreenState extends State<DiagnoseScreen> {
 
     text = clean.join('\n').trim();
 
-    final seen = <String>{};
-    text = text.split(RegExp(r'(?<=[.!?。！？])\s+'))
-        .where((v) =>
-            v.trim().isNotEmpty &&
-            seen.add(v.trim().toLowerCase()))
-        .join(' ')
+    // Giữ nguyên xuống dòng và tiêu đề 5 mục của AI.
+    text = text
+        .replaceAll(RegExp(r'\n{3,}'), '\\n\\n')
         .trim();
 
     if (text.length > 7000) {
