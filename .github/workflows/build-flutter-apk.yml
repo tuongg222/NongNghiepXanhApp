@@ -5,9 +5,6 @@ on:
   push:
     branches:
       - main
-    paths:
-      - '**'
-      - '.github/workflows/build-flutter-apk.yml'
 
 jobs:
   build:
@@ -29,8 +26,8 @@ jobs:
           channel: stable
           cache: true
 
-      - name: Flutter version
-        run: flutter --version
+      - name: Generate Android platform
+        run: flutter create --platforms=android --org com.example --project-name nong_nghiep_xanh .
 
       - name: Install dependencies
         run: flutter pub get
