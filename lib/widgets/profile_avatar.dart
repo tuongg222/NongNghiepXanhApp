@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
@@ -11,7 +12,8 @@ class ProfileAvatar extends StatefulWidget {
 }
 
 class _ProfileAvatarState extends State<ProfileAvatar> {
-  String? imagePath;
+  String? imageData;
+  bool loading = true;
 
   @override
   void initState() {
@@ -21,31 +23,64 @@ class _ProfileAvatarState extends State<ProfileAvatar> {
 
   Future<void> loadAvatar() async {
     final prefs = await SharedPreferences.getInstance();
-    final path = prefs.getString('nx_profile_avatar');
 
-    if (path != null && File(path).existsSync()) {
-      if (mounted) setState(() => imagePath = path);
+    // Avatar mới: lưu trực tiếp dữ liệu ảnh
+    final saved = prefs.getString('nx_profile_avatar_data');
+
+    // Avatar cũ: vẫn hỗ trợ đường dẫn cũ
+    final oldPath = prefs.getString('nx_profile_avatar');
+
+    if (saved != null && saved.isNotEmpty) {
+      imageData = saved;
+    } else if (oldPath != null && File(oldPath).existsSync()) {
+      try {
+        imageData = base64Encode(await File(oldPath).readAsBytes());
+        await prefs.setString('nx_profile_avatar_data', imageData!);
+      } catch (_) {}
+    }
+
+    if (mounted) {
+      setState(() => loading = false);
     }
   }
 
   Future<void> chooseAvatar() async {
-    final picker = ImagePicker();
-    final image = await picker.pickImage(
-      source: ImageSource.gallery,
-      imageQuality: 75,
-      maxWidth: 700,
-    );
+    try {
+      final picker = ImagePicker();
+      final picked = await picker.pickImage(
+        source: ImageSource.gallery,
+        imageQuality: 75,
+        maxWidth: 700,
+      );
 
-    if (image == null) return;
+      if (picked == null) return;
 
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('nx_profile_avatar', image.path);
+      final bytes = await File(picked.path).readAsBytes();
+      final encoded = base64Encode(bytes);
 
-    if (mounted) setState(() => imagePath = image.path);
+      final prefs = await SharedPreferences.getInstance();
+
+      // Lưu dữ liệu ảnh bền vững, không phụ thuộc file tạm
+      await prefs.setString('nx_profile_avatar_data', encoded);
+
+      // Xóa đường dẫn cũ sau khi đã lưu ảnh mới
+      await prefs.remove('nx_profile_avatar');
+
+      if (mounted) {
+        setState(() => imageData = encoded);
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Không thể đổi avatar: $e')),
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    final hasAvatar = imageData != null && imageData!.isNotEmpty;
+
     return GestureDetector(
       onTap: chooseAvatar,
       child: Container(
@@ -64,21 +99,29 @@ class _ProfileAvatarState extends State<ProfileAvatar> {
         ),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(19),
-          child: imagePath != null
-              ? Image.file(
-                  File(imagePath!),
-                  fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) => const Icon(
-                    Icons.person,
-                    color: Colors.white,
-                    size: 35,
+          child: loading
+              ? const Center(
+                  child: SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
                   ),
                 )
-              : const Icon(
-                  Icons.person_rounded,
-                  color: Colors.white,
-                  size: 35,
-                ),
+              : hasAvatar
+                  ? Image.memory(
+                      base64Decode(imageData!),
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) => const Icon(
+                        Icons.person_rounded,
+                        color: Colors.white,
+                        size: 35,
+                      ),
+                    )
+                  : const Icon(
+                      Icons.person_rounded,
+                      color: Colors.white,
+                      size: 35,
+                    ),
         ),
       ),
     );
