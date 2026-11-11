@@ -93,6 +93,67 @@ class _DiagnoseScreenState extends State<DiagnoseScreen> {
     }
   }
 
+
+  String cleanAnswer(dynamic value) {
+    dynamic data = value;
+    for (int i = 0; i < 4; i++) {
+      if (data is Map) {
+        data = data['result'] ?? data['answer'] ??
+            data['response'] ?? data['description'] ??
+            data['content'] ?? data['text'] ?? data;
+      } else if (data is String) {
+        final t = data.trim();
+        if (t.startsWith('{') && t.endsWith('}')) {
+          try {
+            data = jsonDecode(t);
+            continue;
+          } catch (_) {}
+        }
+        break;
+      } else {
+        break;
+      }
+    }
+
+    String text = data is String
+        ? data
+        : const JsonEncoder.withIndent('  ').convert(data);
+
+    text = text.replaceAll(r'\n', '\n')
+        .replaceAll('**', '')
+        .replaceAll('\r', '')
+        .trim();
+
+    final lines = text.split('\n');
+    final clean = <String>[];
+
+    for (final line in lines) {
+      final v = line.trim();
+      if (v.isEmpty) {
+        if (clean.isNotEmpty && clean.last.isNotEmpty) clean.add('');
+      } else if (clean.isEmpty || clean.last != v) {
+        clean.add(v);
+      }
+    }
+
+    text = clean.join('\n').trim();
+
+    final seen = <String>{};
+    text = text.split(RegExp(r'(?<=[.!?。！？])\s+'))
+        .where((v) =>
+            v.trim().isNotEmpty &&
+            seen.add(v.trim().toLowerCase()))
+        .join(' ')
+        .trim();
+
+    if (text.length > 7000) {
+      text = '${text.substring(0, 7000)}\n\n(Đã rút gọn nội dung)';
+    }
+
+    return text.isEmpty
+        ? 'AI chưa tạo được nội dung phân tích.'
+        : text;
+  }
   Future<void> analyze() async {
     if (image == null || busy) return;
 
@@ -125,7 +186,7 @@ class _DiagnoseScreenState extends State<DiagnoseScreen> {
         context: context,
       );
 
-      final pretty = const JsonEncoder.withIndent('  ').convert(response);
+      final pretty = cleanAnswer(response);
 
       await saveHistory({
         'crop': crop,
